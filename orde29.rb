@@ -1,5 +1,73 @@
 def solve(input)
-  input.split('/').join(',')
+  entries, states = input.chars.reduce([[[]], []]) {|(entries, states), c|
+    # puts "entities: #{entries}, states: #{states}, c: #{c}"
+    case states.last
+    when '/'
+      if c == '/' && entries.last.last == '/'
+        [entries, states[0...-1]]
+      else
+        e = entries.pop
+        entries.push(e[0...-1])
+        entries.push([])
+        states.pop
+        # puts "entities: #{entries}, states: #{states}, c: #{c}"
+        case c
+        when '"'
+          [entries, states.push('"')]
+        when "'"
+          [entries, states.push("'")]
+        else
+          entries.last.push(c)
+          [entries, states]
+        end
+      end
+    when '"'
+      case c
+      when '/'
+        entries.last.push('/')
+        [entries, states]
+      when '"'
+        [entries, states[0...-1]]
+      when "'"
+        entries.last.push("'")
+        [entries, states]
+      else
+        entries.last.push(c)
+        [entries, states]
+      end
+    when "'"
+      case c
+      when '/'
+        entries.last.push('/')
+        [entries, states]
+      when '"'
+        entries.last.push('"')
+        [entries, states]
+      when "'"
+        [entries, states[0...-1]]
+      else
+        entries.last.push(c)
+        [entries, states]
+      end
+    else
+      case c
+      when '/'
+        entries.last.push('/')
+        [entries, states.push('/')]
+      when '"'
+        [entries, states.push('"')]
+      when "'"
+        [entries, states.push("'")]
+      else
+        entries.last.push(c)
+        [entries, states]
+      end
+    end
+  }
+
+  return '-' unless states.empty?
+  return '-' if entries.any? {|e| e.empty? }
+  entries.map(&:join).join(',')
 end
 
 def test(input, expected)
@@ -8,7 +76,7 @@ def test(input, expected)
   if expected == actual
     puts "passed: #{expected}"
   else
-    puts "failed: expected: #{expected}, actual: #{actual}"
+    puts "failed: input: [#{input}], expected: [#{expected}], actual: [#{actual}]"
   end
 end
 
